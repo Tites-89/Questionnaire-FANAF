@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#123c69">
+<title>Maquette FANAF – Questionnaire de recherche</title>
+<style>
+:root{--blue:#123c69;--light:#f4f7fb;--border:#d7dee8;--text:#1e293b;--green:#16734a;--danger:#b42318}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--light);color:var(--text);line-height:1.5}
+header{background:var(--blue);color:white;padding:24px 16px;text-align:center}
+header h1{margin:0;font-size:1.35rem} header p{margin:8px 0 0;font-size:.95rem}
+main{max-width:900px;margin:22px auto;padding:0 14px}.card{background:white;border-radius:14px;padding:22px;box-shadow:0 4px 18px #122b4614;margin-bottom:18px}
+h2{color:var(--blue);font-size:1.2rem;margin-top:0} h3{font-size:1rem;color:var(--blue)}
+button{border:0;border-radius:9px;padding:12px 17px;font-weight:bold;cursor:pointer;margin:4px}
+.primary{background:var(--blue);color:white}.secondary{background:#e8eef6;color:var(--blue)}.success{background:var(--green);color:white}.danger{background:var(--danger);color:white}
+.hidden{display:none!important}.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.choice{border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;background:white}.choice:hover{border-color:var(--blue);background:#f7faff}
+label{display:block;font-weight:bold;margin:17px 0 7px} input[type=text],input[type=email],input[type=tel],input[type=date],textarea,select{width:100%;padding:11px;border:1px solid #bcc8d6;border-radius:8px;font:inherit;background:white}textarea{min-height:95px;resize:vertical}
+.option{font-weight:normal;margin:8px 0;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fbfdff}.option input{margin-right:8px}
+.progress{height:12px;background:#e5eaf1;border-radius:20px;overflow:hidden}.progress-bar{height:100%;background:var(--green);width:0}
+.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.muted{color:#64748b;font-size:.9rem}.notice{background:#fff8e6;border-left:4px solid #d99a00;padding:12px;border-radius:7px}
+.actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:22px}
+footer{text-align:center;color:#64748b;font-size:.85rem;padding:20px}
+@media(max-width:600px){.card{padding:16px}header h1{font-size:1.1rem}button{width:100%;margin:4px 0}.actions button{width:100%}}
+</style>
+</head>
+<body>
+<header>
+<h1>Prix Julien Jean CODJOVI 2026</h1>
+<p>Maquette de collecte de données – risques climatiques et techniques au Tchad</p>
+</header>
+<main>
+<section id="home" class="card">
+<h2>Bienvenue</h2>
+<p>Cette maquette permet de répondre à un questionnaire, d’enregistrer une progression et de reprendre la saisie sur le même appareil.</p>
+<div class="notice"><b>Important :</b> cette version est une maquette locale. Les réponses restent dans le navigateur utilisé et ne sont pas automatiquement transmises au chercheur.</div>
+<h3>Choisissez votre profil</h3>
+<div class="choice-grid">
+<div class="choice" onclick="start('assureur')"><h3>Assureur / Professionnel de l’assurance</h3><p>Questionnaire destiné aux compagnies, intermédiaires et experts du secteur.</p></div>
+<div class="choice" onclick="start('entreprise')"><h3>Entreprise / Organisation</h3><p>Questionnaire destiné aux entreprises, ONG, projets et organisations exposées aux risques.</p></div>
+</div>
+<button class="secondary" onclick="resume()">Reprendre une réponse enregistrée</button><button class="secondary" onclick="openDashboard()">Ouvrir le tableau de bord</button>
+</section>
+
+<section id="app" class="card hidden">
+<div class="topline"><h2 id="form-title"></h2><span id="counter" class="muted"></span></div>
+<div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+<p id="section-name" class="muted"></p>
+<form id="question-form"></form>
+<div class="actions">
+<button class="secondary" onclick="previous()">← Précédent</button>
+<button class="secondary" onclick="save()">Enregistrer</button>
+<button class="primary" onclick="next()">Suivant →</button>
+<button class="success hidden" id="submit-btn" onclick="submitForm()">Soumettre</button>
+</div>
+<button class="secondary" onclick="goHome()">Quitter sans soumettre</button>
+</section>
+
+<section id="result" class="card hidden">
+<h2 id="result-title">Réponse enregistrée</h2>
+<p id="result-message">Votre réponse a été enregistrée. Si la connexion Google Sheets est active, elle a également été envoyée à la base centrale.</p>
+<button class="success" onclick="downloadJSON()">Télécharger ma réponse</button>
+<button class="secondary" onclick="shareWhatsApp()">Partager le message WhatsApp</button>
+<button class="primary" onclick="goHome()">Retour à l’accueil</button>
+</section>
+
+<section id="dashboard" class="card hidden">
+<h2>Tableau de bord de recherche</h2>
+<p class="muted">Les statistiques affichées ici sont celles enregistrées sur cet appareil. La base centrale et le tableau de bord partagé sont gérés dans Google Sheets.</p>
+<div class="choice-grid">
+<div class="choice"><h3 id="total-count">0</h3><p>Répondants</p></div>
+<div class="choice"><h3 id="assureur-count">0</h3><p>Assureurs</p></div>
+<div class="choice"><h3 id="entreprise-count">0</h3><p>Entreprises / ONG</p></div>
+</div>
+<h3>Répartition par profil</h3><div id="profile-stats"></div>
+<h3>Actions administratives</h3>
+<button class="success" onclick="exportCSV()">Exporter toutes les réponses en Excel/CSV</button>
+<button class="secondary" onclick="document.getElementById('csv-input').click()">Importer un fichier CSV</button>
+<input id="csv-input" type="file" accept=".csv" class="hidden" onchange="importCSV(event)">
+<button class="danger" onclick="clearAllData()">Effacer les données locales</button>
+<button class="secondary" onclick="goHome()">Retour à l’accueil</button>
+</section>
+</main>
+<footer>Maquette de recherche – FANAF / Prix Julien Jean CODJOVI 2026</footer>
+
+<script>
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuwy8fpvgO4YD3Uan8zUzB-6S5k8Pr19UKbtqiswpH-QaQOcy25zE5G7rqfN6PF9JH/exec";
+const common={
+assureur:[['Fonction du répondant','select',['Direction','Souscription','Sinistres','Technique / expertise','Réassurance','Actuariat','Autre']],['Type de structure / compagnie','select',['Compagnie d’assurance','Réassureur','Courtier','Agent général','Cabinet d’expertise','Autre']],['Ancienneté dans le secteur','select',['Moins de 2 ans','2 à 5 ans','6 à 10 ans','Plus de 10 ans']],['Risques climatiques importants','check',['Inondation','Sécheresse','Fortes chaleurs','Tempêtes / vents violents','Pluies intenses','Autres']],['Risques techniques suivis','check',['Panne d’équipements','Incendie','Défaillance électrique','Bris de machines','Défaillance climatisation / froid','Accident technique','Autres']],['Comment évaluez-vous l’évolution de ces risques ?','select',['En baisse','Stable','En hausse','En forte hausse','Ne sait pas']],['Des sinistres climatiques ont-ils été enregistrés ?','select',['Oui','Non','Ne sait pas']],['Des sinistres techniques ont-ils été enregistrés ?','select',['Oui','Non','Ne sait pas']],['Principaux dommages ou pertes économiques observés','textarea'],['Produits couvrant ces risques','check',['Multirisque entreprise','Incendie','Bris de machines','Responsabilité civile','Transport','Agricole / paramétrique','Autre','Aucun produit spécifique']],['Niveau actuel de couverture','select',['Très insuffisant','Insuffisant','Moyen','Satisfaisant','Très satisfaisant']],['Risques encore insuffisamment couverts','textarea'],['Facteurs limitant la couverture','check',['Coût des primes','Manque de connaissance','Exclusions','Difficulté d’évaluation','Manque de données','Capacité financière des clients','Autres']],['Les mesures de prévention sont-elles adaptées ?','select',['Rarement','Parfois','Souvent','Très souvent','Je ne sais pas']],['Mesures de prévention exigées ou recommandées','check',['Maintenance','Protection incendie','Contrôle électrique','Protection contre les inondations','Plan de continuité','Formation','Inspection technique','Autres']],['Améliorations nécessaires dans l’évaluation technique avant souscription','textarea'],['Influence du changement climatique sur la perception du risque','select',['Pas du tout','Faiblement','Modérément','Fortement','Très fortement']],['Nouveaux risques ou tendances observés','textarea'],['Besoins prioritaires en données climatiques et techniques','textarea'],['Solutions de couverture à développer','check',['Produits adaptés au Sahel','Assurance paramétrique','Meilleure réassurance','Partenariats assureur-entreprise-expert','Digitalisation','Bases de données de sinistres','Expertise technique','Autres']],['Innovations à développer sur le marché tchadien','textarea'],['La prévention peut-elle réduire le coût des sinistres ?','select',['Pas du tout','Faiblement','Moyennement','Fortement','Très fortement']],['Recommandations prioritaires pour renforcer la résilience','textarea'],['Enseignements d’autres marchés FANAF utiles au Tchad','textarea'],['La coopération régionale est-elle utile ?','select',['Oui','Partiellement','Non','Ne sait pas']],['Trois priorités absolues','textarea'],['Observation ou recommandation complémentaire','textarea'],['Adresse e-mail (facultative)','email'],['Téléphone (facultatif)','tel'],['Acceptez-vous d’être recontacté ?','select',['Oui','Non']]],
+entreprise:[['Nom ou code de l’entreprise (facultatif)','text'],['Secteur d’activité','select',['BTP','Industrie','Commerce','Transport / logistique','Agriculture / élevage','Énergie','Services','ONG / projet','Autre']],['Taille de l’organisation','select',['Très petite','Petite','Moyenne','Grande']],['Fonction du répondant','text'],['Risques climatiques rencontrés','check',['Inondation','Sécheresse','Fortes chaleurs','Vents violents','Pluies intenses','Autres']],['Risques techniques rencontrés','check',['Panne d’équipements','Incendie','Défaillance électrique','Bris de machines','Défaillance climatisation / froid','Accident technique','Autres']],['Fréquence des incidents techniques','select',['Jamais','Rarement','Parfois','Souvent','Très souvent']],['Équipements ou installations les plus exposés','textarea'],['Principaux dommages subis ou redoutés','textarea'],['Conséquences possibles','check',['Arrêt de production','Perte de chiffre d’affaires','Dommages matériels','Pertes de stocks','Frais de réparation','Retards','Perte de données','Autres']],['Capacité à estimer le coût potentiel d’un sinistre','select',['Pas du tout','Faiblement','Moyennement','Bien','Très bien']],['Conséquences d’un sinistre important','textarea'],['Les principaux risques sont-ils assurés ?','select',['Oui','Partiellement','Non','Ne sait pas']],['Contrats d’assurance détenus','check',['Multirisque','Incendie','Bris de machines','Responsabilité civile','Transport','Équipements','Autre','Aucun']],['Niveau de couverture','select',['Très insuffisant','Insuffisant','Moyen','Satisfaisant','Très satisfaisant']],['Risques restant insuffisamment couverts','textarea'],['Pourquoi certains risques ne sont-ils pas assurés ?','check',['Prime élevée','Manque d’information','Produit inadapté','Exclusions','Difficulté de souscription','Risque jugé faible','Autre']],['Avez-vous déjà déclaré un sinistre ?','select',['Oui','Non']],['Satisfaction concernant la gestion des sinistres','select',['Très insatisfaisante','Insatisfaisante','Moyenne','Satisfaisante','Très satisfaisante','Non concerné']],['Mesures de prévention appliquées','check',['Maintenance','Contrôle électrique','Protection incendie','Protection contre les inondations','Formation','Inspection','Plan de continuité','Autres']],['Existe-t-il un programme de maintenance formalisé ?','select',['Oui','Partiellement','Non']],['Fréquence du contrôle des équipements','select',['Mensuelle','Trimestrielle','Semestrielle','Annuelle','Irrégulière','Jamais']],['Difficultés liées à la prévention technique','textarea'],['Le climat a-t-il perturbé votre activité ?','select',['Oui, fortement','Oui, modérément','Oui, faiblement','Non']],['Principales perturbations observées','textarea'],['Les risques climatiques sont-ils pris en compte dans les investissements ?','select',['Jamais','Rarement','Parfois','Souvent','Toujours']],['Produits ou services utiles','check',['Assurance climat','Équipements de protection','Bris de machines','Assurance paramétrique','Conseil en prévention','Inspection technique','Assistance après sinistre','Autres']],['Intérêt pour un produit combinant assurance et prévention','select',['Oui','Peut-être','Non']],['Améliorations attendues des assureurs','textarea'],['Comment rendre l’assurance plus accessible ?','textarea'],['La prévention réduirait-elle les pertes ?','select',['Pas du tout','Faiblement','Moyennement','Fortement','Très fortement']],['Trois actions principales à mettre en œuvre','textarea'],['Recommandations aux assureurs et pouvoirs publics','textarea'],['Évolution probable des risques dans les prochaines années','textarea'],['Adresse e-mail (facultative)','email'],['Téléphone (facultatif)','tel']]};
+let profile='',questions=[],page=0,answers={},submitted={};
+function start(type){profile=type;questions=common[type];page=0;answers=JSON.parse(localStorage.getItem('fanaf_'+type)||'{}');hideAll();document.getElementById('app').classList.remove('hidden');render()}
+function resume(){if(localStorage.getItem('fanaf_assureur'))start('assureur');else if(localStorage.getItem('fanaf_entreprise'))start('entreprise');else alert('Aucune réponse enregistrée sur cet appareil.')}
+function hideAll(){['home','app','result','dashboard'].forEach(id=>document.getElementById(id).classList.add('hidden'))}
+function render(){let total=questions.length;document.getElementById('form-title').textContent=profile==='assureur'?'Questionnaire – Assureur':'Questionnaire – Entreprise / Organisation';document.getElementById('counter').textContent='Question '+(page+1)+' / '+total;document.getElementById('progress-bar').style.width=((page+1)/total*100)+'%';document.getElementById('section-name').textContent='Les réponses sont enregistrées automatiquement sur cet appareil.';let q=questions[page],form=document.getElementById('question-form');form.innerHTML='';let label=document.createElement('label');label.textContent=(page+1)+'. '+q[0];form.appendChild(label);if(q[1]==='check'){q[2].forEach(v=>{let d=document.createElement('div');d.className='option';let i=document.createElement('input');i.type='checkbox';i.value=v;i.checked=(answers[page]||[]).includes(v);i.onchange=()=>answers[page]=[...form.querySelectorAll('input:checked')].map(x=>x.value);d.append(i,document.createTextNode(v));form.appendChild(d)})}else if(q[1]==='select'){let s=document.createElement('select');s.innerHTML='<option value="">-- Sélectionner --</option>'+q[2].map(v=>'<option>'+v+'</option>').join('');s.value=answers[page]||'';s.onchange=()=>answers[page]=s.value;form.appendChild(s)}else{let i=q[1]==='textarea'?document.createElement('textarea'):document.createElement('input');if(q[1]!=='textarea')i.type=q[1];i.value=answers[page]||'';i.oninput=()=>answers[page]=i.value;form.appendChild(i)}document.querySelector('.actions .primary').classList.toggle('hidden',page===total-1);document.getElementById('submit-btn').classList.toggle('hidden',page!==total-1)}
+function save(){saveSilent();alert('Progression enregistrée.')};function saveSilent(){localStorage.setItem('fanaf_'+profile,JSON.stringify(answers))};function next(){saveSilent();if(page<questions.length-1){page++;render()}else submitForm()};function previous(){saveSilent();if(page>0){page--;render()}}
+function submitForm(){
+  saveSilent();
+  const now = new Date().toISOString();
+  submitted = {
+    id: 'FANAF-' + Date.now(),
+    profil: profile,
+    date: now,
+    reponses: answers
+  };
+
+  // Conservation locale de secours.
+  let all = JSON.parse(localStorage.getItem('fanaf_submissions') || '[]');
+  all.push(submitted);
+  localStorage.setItem('fanaf_submissions', JSON.stringify(all));
+  localStorage.setItem('fanaf_last_submission', JSON.stringify(submitted));
+
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.indexOf('COLLEZ_ICI') === 0) {
+    showResult(false, 'Réponse enregistrée localement. La connexion Google Sheets n’est pas encore configurée.');
+    return;
+  }
+
+  sendToGoogleSheets();
+}
+
+function sendToGoogleSheets(){
+  // Envoi par formulaire HTML vers une iframe cachée :
+  // cette méthode évite les problèmes CORS fréquents avec fetch() et Apps Script.
+  const iframeName = 'fanaf-submit-frame';
+  let iframe = document.getElementById(iframeName);
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.id = iframeName;
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = GOOGLE_SCRIPT_URL;
+  form.target = iframeName;
+  form.style.display = 'none';
+
+  const fields = {
+    action: 'submitResponse',
+    payload: JSON.stringify({
+      id: submitted.id,
+      date: submitted.date,
+      profil: submitted.profil,
+      questions: questions.map(q => q[0]),
+      answers: submitted.reponses
+    })
+  };
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  showResult(true, 'Envoi vers la base centrale Google Sheets en cours…');
+  form.submit();
+
+  // L’iframe ne permet pas de lire la réponse Apps Script depuis ce domaine.
+  // On confirme donc l’envoi du formulaire après un court délai et conservons la copie locale.
+  setTimeout(() => {
+    showResult(true, 'Réponse envoyée vers Google Sheets. Une copie locale a également été conservée.');
+    form.remove();
+  }, 1800);
+}
+
+function showResult(connected, message){
+  hideAll();
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('result-title').textContent = connected
+    ? 'Réponse envoyée'
+    : 'Réponse enregistrée localement';
+  document.getElementById('result-message').textContent = message;
+}
+function downloadJSON(){let blob=new Blob([JSON.stringify(submitted,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='reponse_fanaf_'+profile+'.json';a.click();URL.revokeObjectURL(url)}
+function shareWhatsApp(){window.open('https://wa.me/?text='+encodeURIComponent('Bonjour, voici ma réponse à l’enquête FANAF. Le fichier JSON peut être joint à ce message.'),'_blank')}
+function openDashboard(){hideAll();document.getElementById('dashboard').classList.remove('hidden');let rows=JSON.parse(localStorage.getItem('fanaf_submissions')||'[]');document.getElementById('total-count').textContent=rows.length;document.getElementById('assureur-count').textContent=rows.filter(x=>x.profil==='assureur').length;document.getElementById('entreprise-count').textContent=rows.filter(x=>x.profil==='entreprise').length;document.getElementById('profile-stats').innerHTML='<p>Assureurs : '+rows.filter(x=>x.profil==='assureur').length+'</p><p>Entreprises / ONG : '+rows.filter(x=>x.profil==='entreprise').length+'</p>'}
+function exportCSV(){let rows=JSON.parse(localStorage.getItem('fanaf_submissions')||'[]');if(!rows.length){alert('Aucune réponse à exporter.');return}let max=0;rows.forEach(r=>max=Math.max(max,Object.keys(r.reponses||{}).length));let headers=['ID','Date','Profil'];for(let i=0;i<max;i++)headers.push('Question_'+(i+1));let lines=[headers];rows.forEach(r=>{let line=[r.id,r.date,r.profil];for(let i=0;i<max;i++){let v=r.reponses?.[i]??'';if(Array.isArray(v))v=v.join(' | ');line.push(v)}lines.push(line)});let csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n');let blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='base_enquete_fanaf.csv';a.click();URL.revokeObjectURL(url)}
+function importCSV(e){let file=e.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=()=>alert('Fichier CSV sélectionné. Pour éviter d’écraser les données, l’import automatique complet sera activé dans la version connectée à Google Sheets.');reader.readAsText(file)}
+function clearAllData(){if(confirm('Effacer toutes les réponses enregistrées sur cet appareil ?')){localStorage.removeItem('fanaf_submissions');localStorage.removeItem('fanaf_assureur');localStorage.removeItem('fanaf_entreprise');openDashboard()}}
+function goHome(){hideAll();document.getElementById('home').classList.remove('hidden')}
+</script>
+</body>
+</html>
